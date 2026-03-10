@@ -597,6 +597,8 @@ void smf_qos_flow_binding(smf_sess_t *sess)
 
                 memcpy(&qos_flow->qos, &pcc_rule->qos, sizeof(ogs_qos_t));
 
+                qos_flow->qnc = sess->policy.qnc_rule[i]; //kassem
+
                 qos_flow_created = true;
 
             } else {
@@ -626,7 +628,9 @@ void smf_qos_flow_binding(smf_sess_t *sess)
                          * signaling (NGAP/PFCP) messages.
                          */
                         memcpy(&qos_flow->qos, &pcc_rule->qos, sizeof(ogs_qos_t));
-
+                        
+                        qos_flow->qnc = sess->policy.qnc_rule[i]; //kassem
+                        
                         /*
                          * Setting 'qos_presence' to true triggers encoding of
                          * the QoS IE in the subsequent Bearer Request message.
