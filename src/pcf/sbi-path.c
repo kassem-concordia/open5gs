@@ -513,7 +513,14 @@ bool pcf_sbi_send_smpolicycontrol_create_response(
         // Kassem 
         QosData->is_qnc = true;
         QosData->qnc = 1;
-
+        char *json_test = OpenAPI_sm_policy_decision_convert_to_json(sendmsg.SmPolicyDecision);
+        char *json_test = OpenAPI_sm_policy_decision_convert_to_json(sendmsg.SmPolicyDecision);
+        if (json_test) {
+            /* \033[0;31m = Red | \033[0m = Reset */
+            ogs_info("\033[0;31m [DEBUG] KASSSSEMMMMMMMMMMMMMMMMMMMMMM PCF OUTGOING JSON: %s \033[0m", json_test);
+            ogs_free(json_test);
+        }
+        //kassem
         QosDecisionMap = OpenAPI_map_create(QosData->qos_id, QosData);
         ogs_assert(QosDecisionMap);
 
