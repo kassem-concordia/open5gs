@@ -510,6 +510,10 @@ bool pcf_sbi_send_smpolicycontrol_create_response(
         ogs_assert(QosData);
         ogs_assert(QosData->qos_id);
 
+        // Kassem 
+        QosData->is_qnc = true;
+        QosData->qnc = 1;
+
         QosDecisionMap = OpenAPI_map_create(QosData->qos_id, QosData);
         ogs_assert(QosDecisionMap);
 

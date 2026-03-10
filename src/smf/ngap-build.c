@@ -56,11 +56,14 @@ static void fill_qos_level_parameters(
     /* Optional GBR/MBR Information */
     if (include_gbr &&
         qos->mbr.downlink && qos->mbr.uplink &&
-        qos->gbr.downlink && qos->gbr.uplink) {
+        qos->gbr.downlink && qos->gbr.uplink, bool qnc ) { // kassem qnc
         NGAP_GBR_QosInformation_t *gBR_QosInformation =
             params->gBR_QosInformation = CALLOC(1, sizeof(*gBR_QosInformation));
         ogs_assert(gBR_QosInformation);
-
+        if (qnc) {
+            gBR_QosInformation->notificationControl = CALLOC(1, sizeof(long));
+            *gBR_QosInformation->notificationControl = NGAP_NotificationControl_requested;
+        }  
         ogs_assert(qos->mbr.downlink <= OGS_MAX_BITRATE_NGAP);
         ogs_assert(qos->mbr.uplink <= OGS_MAX_BITRATE_NGAP);
         ogs_assert(qos->gbr.downlink <= OGS_MAX_BITRATE_NGAP);
@@ -344,7 +347,7 @@ ogs_pkbuf_t *ngap_build_pdu_session_resource_setup_request_transfer(
 
         fill_qos_level_parameters(
                 &QosFlowSetupRequestItem->qosFlowLevelQosParameters,
-                &qos, true);
+                &qos, true, qos_flow->qnc); //Kassem
 
     } else {
         ogs_list_for_each(&sess->bearer_list, qos_flow) {

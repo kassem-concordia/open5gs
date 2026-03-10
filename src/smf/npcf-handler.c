@@ -217,6 +217,12 @@ static void update_authorized_pcc_rule_and_qos(
 
             pcc_rule->qos.index = QosData->_5qi;
             pcc_rule->qos.arp.priority_level = QosData->priority_level;
+            // kassem
+            if (QosData->is_qnc) {
+                    sess->policy.qnc_rule[sess->policy.num_of_pcc_rule] = QosData->qnc;
+            } else {
+                    sess->policy.qnc_rule[sess->policy.num_of_pcc_rule] = false;
+            }
 
             if (QosData->arp) {
                 pcc_rule->qos.arp.priority_level = QosData->arp->priority_level;

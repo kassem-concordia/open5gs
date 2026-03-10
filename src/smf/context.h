@@ -264,7 +264,9 @@ typedef struct smf_bearer_s {
         char        *id;            /* 5GC: PCC Rule Id */
     } pcc_rule;
     ogs_qos_t       qos;            /* QoS Information */
-
+   //kassem
+    bool qnc;
+   
     OGS_POOL(pf_identifier_pool, uint8_t);
 
     /* Packet Filter List */
@@ -612,6 +614,9 @@ typedef struct smf_sess_s {
     struct {
         ogs_pcc_rule_t  pcc_rule[OGS_MAX_NUM_OF_PCC_RULE];
         int             num_of_pcc_rule;
+        //kasssem
+        bool qnc_rule[OGS_MAX_NUM_OF_PCC_RULE];
+        
     } policy; /* Saved from N7 or Gx */
 
     /* Paging */
