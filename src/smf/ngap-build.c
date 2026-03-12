@@ -25,7 +25,7 @@
 static void fill_qos_level_parameters(
     NGAP_QosFlowLevelQosParameters_t *params,
     const ogs_qos_t *qos,
-    bool include_gbr)
+    bool include_gbr, bool qnc) //kassem
 {
     NGAP_AllocationAndRetentionPriority_t
         *allocationAndRetentionPriority = NULL;
@@ -361,7 +361,7 @@ ogs_pkbuf_t *ngap_build_pdu_session_resource_setup_request_transfer(
 
             fill_qos_level_parameters(
                     &QosFlowSetupRequestItem->qosFlowLevelQosParameters,
-                    &qos_flow->qos, true);
+                    &qos_flow->qos, true, qos_flow->qnc);
         }
     }
 
@@ -482,7 +482,7 @@ ogs_pkbuf_t *ngap_build_pdu_session_resource_modify_request_transfer(
 
                     fill_qos_level_parameters(
                             QosFlowAddOrModifyRequestItem->
-                                qosFlowLevelQosParameters, &qos, true);
+                                qosFlowLevelQosParameters, &qos, false); //kassem false
                 }
             }
         }
@@ -505,7 +505,7 @@ ogs_pkbuf_t *ngap_build_pdu_session_resource_modify_request_transfer(
                     QosFlowAddOrModifyRequestItem->qosFlowLevelQosParameters);
             fill_qos_level_parameters(
                     QosFlowAddOrModifyRequestItem->qosFlowLevelQosParameters,
-                    &qos_flow->qos, include_gbr);
+                    &qos_flow->qos, include_gbr, qos_flow->qnc); //kassem
         }
     }
 

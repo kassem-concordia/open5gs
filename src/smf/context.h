@@ -616,7 +616,9 @@ typedef struct smf_sess_s {
         int             num_of_pcc_rule;
         //kasssem
         bool qnc_rule[OGS_MAX_NUM_OF_PCC_RULE];
-        
+        /* QNC for the default QoS flow (from PCF qos_decs via ref_qos_data) */
+        bool default_qos_qnc;
+        //kassem
     } policy; /* Saved from N7 or Gx */
 
     /* Paging */

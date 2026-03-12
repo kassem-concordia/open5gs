@@ -285,7 +285,7 @@ bool pcf_sbi_send_am_policy_control_notify(pcf_ue_am_t *pcf_ue_am)
     return rc;
 }
 
-bool pcf_sbi_send_smpolicycontrol_create_response(
+bool pcf_sbi_send_smpolicycontrol_create_response(  
         pcf_sess_t *sess, ogs_sbi_stream_t *stream)
 {
     int i, rv, status = 0;
@@ -377,6 +377,11 @@ bool pcf_sbi_send_smpolicycontrol_create_response(
     SessRuleList = OpenAPI_list_create();
     ogs_assert(SessRuleList);
 
+    //Kassem 
+    QosDecisionList = OpenAPI_list_create();
+    ogs_assert(QosDecisionList);
+    //kassem
+
     SessionRule = ogs_calloc(1, sizeof(*SessionRule));
     ogs_assert(SessionRule);
 
@@ -416,11 +421,11 @@ bool pcf_sbi_send_smpolicycontrol_create_response(
         memset(&AuthDefQos, 0, sizeof(AuthDefQos));
         AuthDefQos.arp = ogs_calloc(1, sizeof(OpenAPI_arp_t));
         ogs_assert(AuthDefQos.arp);
-
         AuthDefQos.is__5qi = true;
         AuthDefQos._5qi = session->qos.index;
         AuthDefQos.is_priority_level = true;
         AuthDefQos.priority_level = session->qos.arp.priority_level;
+
 
         if (session->qos.arp.pre_emption_capability ==
                 OGS_5GC_PRE_EMPTION_ENABLED)
@@ -444,6 +449,23 @@ bool pcf_sbi_send_smpolicycontrol_create_response(
         AuthDefQos.arp->priority_level = session->qos.arp.priority_level;
 
         SessionRule->auth_def_qos = &AuthDefQos;
+
+        //kassem 
+        QosData = ogs_calloc(1, sizeof(*QosData));
+        ogs_assert(QosData);
+        QosData->qos_id = ogs_strdup("qos-default");
+        QosData->is__5qi = true;
+        QosData->_5qi = session->qos.index;
+        QosData->is_qnc = true;
+        QosData->qnc = 1;
+        QosDecisionMap = OpenAPI_map_create(QosData->qos_id, QosData);
+        ogs_assert(QosDecisionMap);
+        OpenAPI_list_add(QosDecisionList, QosDecisionMap);
+        /* Point the SessionRule at this QosData entry */
+        SessionRule->ref_qos_data = OpenAPI_list_create();
+        ogs_assert(SessionRule->ref_qos_data);
+        OpenAPI_list_add(SessionRule->ref_qos_data, ogs_strdup(QosData->qos_id));
+        //kassem
 
         if (sess->subscribed_default_qos->_5qi != AuthDefQos._5qi)
             triggered = true;
@@ -514,13 +536,8 @@ bool pcf_sbi_send_smpolicycontrol_create_response(
         QosData->is_qnc = true;
         QosData->qnc = 1;
         char *json_test = OpenAPI_sm_policy_decision_convert_to_json(sendmsg.SmPolicyDecision);
-        char *json_test = OpenAPI_sm_policy_decision_convert_to_json(sendmsg.SmPolicyDecision);
-        if (json_test) {
-            /* \033[0;31m = Red | \033[0m = Reset */
-            ogs_info("\033[0;31m [DEBUG] KASSSSEMMMMMMMMMMMMMMMMMMMMMM PCF OUTGOING JSON: %s \033[0m", json_test);
-            ogs_free(json_test);
-        }
         //kassem
+
         QosDecisionMap = OpenAPI_map_create(QosData->qos_id, QosData);
         ogs_assert(QosDecisionMap);
 
@@ -578,6 +595,14 @@ bool pcf_sbi_send_smpolicycontrol_create_response(
                 }
                 ogs_free(SessionRule);
             }
+            //kassem
+            if (SessionRule->ref_qos_data) {
+                OpenAPI_lnode_t *ref_node = NULL;
+                OpenAPI_list_for_each(SessionRule->ref_qos_data, ref_node)
+                    if (ref_node->data) ogs_free(ref_node->data);
+                OpenAPI_list_free(SessionRule->ref_qos_data);
+            }
+            //kassem
             ogs_free(SessRuleMap);
         }
     }

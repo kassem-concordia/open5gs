@@ -218,11 +218,11 @@ static void update_authorized_pcc_rule_and_qos(
             pcc_rule->qos.index = QosData->_5qi;
             pcc_rule->qos.arp.priority_level = QosData->priority_level;
             // kassem
-            if (QosData->is_qnc) {
-                    sess->policy.qnc_rule[sess->policy.num_of_pcc_rule] = QosData->qnc;
-            } else {
-                    sess->policy.qnc_rule[sess->policy.num_of_pcc_rule] = false;
-            }
+            sess->policy.qnc_rule[sess->policy.num_of_pcc_rule] = (QosData->is_qnc && QosData->qnc) ? true : false;
+            ogs_info("[QNC-DEBUG] SMF PCC rule[%d] QNC=%s",
+            sess->policy.num_of_pcc_rule,
+            sess->policy.qnc_rule[sess->policy.num_of_pcc_rule] ? "true" : "false");
+            //kassem
 
             if (QosData->arp) {
                 pcc_rule->qos.arp.priority_level = QosData->arp->priority_level;
@@ -476,6 +476,34 @@ bool smf_npcf_smpolicycontrol_handle_create(
             }
         }
     }
+    /* Kassem QNC for the default QoS flow:
+ * The SessionRule carries ref_qos_data pointing to an entry
+ * in qos_decs that has the qnc flag set by the PCF.
+ * Extract it here and store in sess->policy.default_qos_qnc. */
+    if (SessionRule->ref_qos_data &&
+            SessionRule->ref_qos_data->first &&
+            SmPolicyDecision->qos_decs) {
+        char *ref_qos_id = SessionRule->ref_qos_data->first->data;
+        OpenAPI_lnode_t *qos_node = NULL;
+
+        OpenAPI_list_for_each(SmPolicyDecision->qos_decs, qos_node) {
+            OpenAPI_map_t *QosDecMap = qos_node->data;
+            if (!QosDecMap || !QosDecMap->value) continue;
+
+            OpenAPI_qos_data_t *QosDec = QosDecMap->value;
+            if (!QosDec->qos_id) continue;
+
+            if (strcmp(ref_qos_id, QosDec->qos_id) == 0) {
+                sess->policy.default_qos_qnc =
+                    (QosDec->is_qnc && QosDec->qnc) ? true : false;
+                ogs_info("[QNC-DEBUG] SMF default QoS flow QNC=%s (qos_id=%s)",
+                        sess->policy.default_qos_qnc ? "true" : "false",
+                        QosDec->qos_id);
+                break;
+            }
+        }
+    }
+    //kassem
 
     /* Update authorized PCC rule & QoS */
     update_authorized_pcc_rule_and_qos(sess, SmPolicyDecision);
@@ -512,6 +540,12 @@ bool smf_npcf_smpolicycontrol_handle_create(
 
     /* Copy Session QoS information to Default QoS Flow */
     memcpy(&qos_flow->qos, &sess->session.qos, sizeof(ogs_qos_t));
+    
+    /* Kassem Apply QNC to the default QoS flow bearer */
+    qos_flow->qnc = sess->policy.default_qos_qnc;
+    ogs_info("[QNC-DEBUG] SMF default bearer QNC set to %s",
+        qos_flow->qnc ? "true" : "false");
+    //kassem
 
     /* Setup QER */
     qer = qos_flow->qer;
