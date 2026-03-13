@@ -453,18 +453,14 @@ bool pcf_sbi_send_smpolicycontrol_create_response(
         //kassem 
         QosData = ogs_calloc(1, sizeof(*QosData));
         ogs_assert(QosData);
-        QosData->qos_id = ogs_strdup("qos-default");
+        QosData->qos_id  = ogs_strdup("qos-default");
         QosData->is__5qi = true;
-        QosData->_5qi = session->qos.index;
-        QosData->is_qnc = true;
-        QosData->qnc = 1;
+        QosData->_5qi    = session->qos.index;
+        QosData->is_qnc  = true;
+        QosData->qnc     = 1;
         QosDecisionMap = OpenAPI_map_create(QosData->qos_id, QosData);
         ogs_assert(QosDecisionMap);
         OpenAPI_list_add(QosDecisionList, QosDecisionMap);
-        /* Point the SessionRule at this QosData entry */
-        SessionRule->ref_qos_data = OpenAPI_list_create();
-        ogs_assert(SessionRule->ref_qos_data);
-        OpenAPI_list_add(SessionRule->ref_qos_data, ogs_strdup(QosData->qos_id));
         //kassem
 
         if (sess->subscribed_default_qos->_5qi != AuthDefQos._5qi)
@@ -570,7 +566,22 @@ bool pcf_sbi_send_smpolicycontrol_create_response(
     memset(&sendmsg, 0, sizeof(sendmsg));
     sendmsg.SmPolicyDecision = &SmPolicyDecision;
     sendmsg.http.location = ogs_sbi_server_uri(server, &header);
-
+     /* Kassem DEBUG: verify QNC fields are present in outgoing JSON */
+    {
+        cJSON *json = OpenAPI_sm_policy_decision_convertToJSON(
+                sendmsg.SmPolicyDecision);
+        if (json) {
+            char *json_str = cJSON_Print(json);
+            if (json_str) {
+                ogs_info("\033[0;32m[QNC-DEBUG] PCF SmPolicyDecision: %s\033[0m",
+                        json_str);
+                ogs_free(json_str);
+            }
+            cJSON_Delete(json);
+        }
+    }
+    //kassem
+    
     response = ogs_sbi_build_response(
             &sendmsg, OGS_SBI_HTTP_STATUS_CREATED);
     ogs_assert(response);

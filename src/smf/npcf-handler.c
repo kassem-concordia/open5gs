@@ -474,36 +474,31 @@ bool smf_npcf_smpolicycontrol_handle_create(
                     ogs_assert(sess->session.qos.arp.pre_emption_vulnerability);
                 }
             }
-        }
-    }
-    /* Kassem QNC for the default QoS flow:
- * The SessionRule carries ref_qos_data pointing to an entry
- * in qos_decs that has the qnc flag set by the PCF.
- * Extract it here and store in sess->policy.default_qos_qnc. */
-    if (SessionRule->ref_qos_data &&
-            SessionRule->ref_qos_data->first &&
-            SmPolicyDecision->qos_decs) {
-        char *ref_qos_id = SessionRule->ref_qos_data->first->data;
-        OpenAPI_lnode_t *qos_node = NULL;
-
-        OpenAPI_list_for_each(SmPolicyDecision->qos_decs, qos_node) {
-            OpenAPI_map_t *QosDecMap = qos_node->data;
-            if (!QosDecMap || !QosDecMap->value) continue;
-
-            OpenAPI_qos_data_t *QosDec = QosDecMap->value;
-            if (!QosDec->qos_id) continue;
-
-            if (strcmp(ref_qos_id, QosDec->qos_id) == 0) {
-                sess->policy.default_qos_qnc =
-                    (QosDec->is_qnc && QosDec->qnc) ? true : false;
-                ogs_info("[QNC-DEBUG] SMF default QoS flow QNC=%s (qos_id=%s)",
-                        sess->policy.default_qos_qnc ? "true" : "false",
-                        QosDec->qos_id);
-                break;
+            /* kassem QNC for the default QoS flow:
+             * Look for a "qos-default" entry in qos_decs placed there
+             * by the PCF. No ref_qos_data link needed — match by id. */
+            if (SmPolicyDecision->qos_decs) {
+                OpenAPI_lnode_t *qos_node = NULL;
+                OpenAPI_list_for_each(SmPolicyDecision->qos_decs, qos_node) {
+                    OpenAPI_map_t *QosDecMap = qos_node->data;
+                    if (!QosDecMap || !QosDecMap->value) continue;
+ 
+                    OpenAPI_qos_data_t *QosDec = QosDecMap->value;
+                    if (!QosDec->qos_id) continue;
+ 
+                    if (strcmp(QosDec->qos_id, "qos-default") == 0) {
+                        sess->policy.default_qos_qnc =
+                            (QosDec->is_qnc && QosDec->qnc) ? true : false;
+                        ogs_info("[QNC-DEBUG] SMF default QoS flow QNC=%s",
+                                sess->policy.default_qos_qnc ? "true" : "false");
+                        break;
+                    }
+                }
             }
+            //kassem
         }
     }
-    //kassem
+    
 
     /* Update authorized PCC rule & QoS */
     update_authorized_pcc_rule_and_qos(sess, SmPolicyDecision);
@@ -540,7 +535,7 @@ bool smf_npcf_smpolicycontrol_handle_create(
 
     /* Copy Session QoS information to Default QoS Flow */
     memcpy(&qos_flow->qos, &sess->session.qos, sizeof(ogs_qos_t));
-    
+
     /* Kassem Apply QNC to the default QoS flow bearer */
     qos_flow->qnc = sess->policy.default_qos_qnc;
     ogs_info("[QNC-DEBUG] SMF default bearer QNC set to %s",
