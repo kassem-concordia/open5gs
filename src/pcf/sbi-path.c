@@ -531,7 +531,7 @@ bool pcf_sbi_send_smpolicycontrol_create_response(
         // Kassem 
         QosData->is_qnc = true;
         QosData->qnc = 1;
-        char *json_test = OpenAPI_sm_policy_decision_convert_to_json(sendmsg.SmPolicyDecision);
+        //char *json_test = OpenAPI_sm_policy_decision_convertToJson(sendmsg.SmPolicyDecision);
         //kassem
 
         QosDecisionMap = OpenAPI_map_create(QosData->qos_id, QosData);
@@ -581,7 +581,7 @@ bool pcf_sbi_send_smpolicycontrol_create_response(
         }
     }
     //kassem
-    
+
     response = ogs_sbi_build_response(
             &sendmsg, OGS_SBI_HTTP_STATUS_CREATED);
     ogs_assert(response);
@@ -606,14 +606,6 @@ bool pcf_sbi_send_smpolicycontrol_create_response(
                 }
                 ogs_free(SessionRule);
             }
-            //kassem
-            if (SessionRule->ref_qos_data) {
-                OpenAPI_lnode_t *ref_node = NULL;
-                OpenAPI_list_for_each(SessionRule->ref_qos_data, ref_node)
-                    if (ref_node->data) ogs_free(ref_node->data);
-                OpenAPI_list_free(SessionRule->ref_qos_data);
-            }
-            //kassem
             ogs_free(SessRuleMap);
         }
     }
