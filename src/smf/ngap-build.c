@@ -484,7 +484,7 @@ ogs_pkbuf_t *ngap_build_pdu_session_resource_modify_request_transfer(
 
                     fill_qos_level_parameters(
                             QosFlowAddOrModifyRequestItem->
-                                qosFlowLevelQosParameters, &qos, true); //kassem false
+                                qosFlowLevelQosParameters, &qos, true, false); //kassem true false
                 }
             }
         }
